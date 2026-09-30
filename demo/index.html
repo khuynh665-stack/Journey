@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Acme Outfitters (Journey demo)</title>
+  <style>
+    body { font: 15px/1.5 system-ui, sans-serif; margin: 0; background: #fafaf7; color: #222; }
+    header { background: #1f3b2c; color: #fff; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; }
+    header a { color: #fff; margin-left: 16px; text-decoration: none; }
+    main { max-width: 900px; margin: 24px auto; padding: 0 16px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+    .card { background: #fff; border: 1px solid #e5e5e0; border-radius: 10px; padding: 16px; }
+    .swatch { height: 110px; border-radius: 8px; margin-bottom: 10px; }
+    button { background: #1f3b2c; color: #fff; border: 0; border-radius: 6px; padding: 9px 16px; cursor: pointer; font: inherit; }
+    button.secondary { background: #e9ece6; color: #1f3b2c; }
+    input, select { font: inherit; padding: 8px; border: 1px solid #ccc; border-radius: 6px; width: 100%; box-sizing: border-box; margin: 4px 0 12px; }
+    .notice { background: #fff4d6; border: 1px solid #f1d58a; padding: 10px; border-radius: 8px; margin: 12px 0; }
+    .row { display: flex; gap: 10px; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+  <header>
+    <strong>Acme Outfitters</strong>
+    <nav><a href="/demo" data-link>Shop</a><a href="/demo/cart" data-link>Cart (<span id="count">0</span>)</a></nav>
+  </header>
+  <main id="app"></main>
+  <script>
+    // A tiny single-page shop that exercises everything Journey captures.
+    const products = [
+      { id: 1, name: 'Trail Jacket', price: 129, color: '#2f6f4f' },
+      { id: 2, name: 'Summit Pack', price: 89, color: '#b5651d' },
+      { id: 3, name: 'Camp Mug', price: 14, color: '#4a6fa5' },
+      { id: 4, name: 'Wool Beanie', price: 24, color: '#8e3b46' },
+    ];
+    const cart = JSON.parse(sessionStorage.getItem('demo-cart') || '[]');
+    const app = document.getElementById('app');
+    const save = () => { sessionStorage.setItem('demo-cart', JSON.stringify(cart)); document.getElementById('count').textContent = cart.length; };
+    const nav = (to) => { history.pushState({}, '', to); render(); window.scrollTo(0, 0); };
+    document.addEventListener('click', (e) => {
+      const a = e.target.closest('a[data-link]');
+      if (a) { e.preventDefault(); nav(a.getAttribute('href')); }
+    });
+    window.addEventListener('popstate', render);
+
+    function render() {
+      const path = location.pathname.replace(/\/$/, '');
+      save();
+      if (path === '/demo' || path === '') {
+        document.title = 'Shop · Acme Outfitters';
+        app.innerHTML = '<h1>Gear for the trail</h1><div class="grid">' + products.map((p) =>
+          `<div class="card"><div class="swatch" style="background:${p.color}"></div><h3>${p.name}</h3><p>$${p.price}</p><a href="/demo/product/${p.id}" data-link>View</a></div>`).join('') + '</div>';
+      } else if (path.startsWith('/demo/product/')) {
+        const p = products.find((x) => String(x.id) === path.split('/').pop()) || products[0];
+        document.title = p.name + ' · Acme Outfitters';
+        app.innerHTML = `<div class="card"><div class="swatch" style="background:${p.color};height:220px"></div><h1>${p.name}</h1><p>$${p.price}</p>
+          <label>Size <select id="size"><option>S</option><option>M</option><option>L</option></select></label>
+          <div class="row"><button id="add">Add to cart</button><button class="secondary" id="wishlist">Save to wishlist</button></div></div>`;
+        document.getElementById('add').onclick = () => { cart.push(p.id); save(); nav('/demo/cart'); };
+        // Intentionally does nothing: produces dead clicks, and rage clicks if the visitor keeps trying.
+        document.getElementById('wishlist').onclick = () => {};
+      } else if (path === '/demo/cart') {
+        document.title = 'Cart · Acme Outfitters';
+        const items = cart.map((id) => products.find((p) => p.id === id));
+        const total = items.reduce((s, p) => s + p.price, 0);
+        app.innerHTML = `<h1>Your cart</h1><div class="card">${items.length ? items.map((p) => `<div>${p.name} · $${p.price}</div>`).join('') : '<p>Your cart is empty.</p>'}
+          <p><strong>Total: $${total}</strong></p>
+          <label>Coupon code <input id="coupon" name="coupon" data-journey-unmask placeholder="SAVE10"></label>
+          <div class="row"><button class="secondary" id="apply">Apply coupon</button><button id="checkout" ${items.length ? '' : 'disabled'}>Checkout</button></div><div id="msg"></div></div>`;
+        document.getElementById('apply').onclick = () => {
+          // Intentional bug so the dashboard shows a captured JavaScript error.
+          const code = document.getElementById('coupon').value;
+          if (code) window.couponService.apply(code);
+        };
+        document.getElementById('checkout').onclick = () => nav('/demo/checkout');
+      } else if (path === '/demo/checkout') {
+        document.title = 'Checkout · Acme Outfitters';
+        app.innerHTML = `<h1>Checkout</h1><form class="card" id="form">
+          <label>Full name <input name="name" autocomplete="name" required></label>
+          <label>Email <input type="email" name="email" autocomplete="email" required></label>
+          <label>Card number <input name="card" autocomplete="cc-number" inputmode="numeric" required></label>
+          <div class="notice" data-journey-mask>Shipping to your saved address: 12 Elm Street, Springfield</div>
+          <button>Place order</button></form>`;
+        document.getElementById('form').onsubmit = (e) => { e.preventDefault(); cart.length = 0; save(); nav('/demo/thank-you'); Journey.track('order_placed', { value: 1 }); };
+      } else if (path === '/demo/thank-you') {
+        document.title = 'Thank you · Acme Outfitters';
+        app.innerHTML = '<div class="card"><h1>Thanks for your order!</h1><a href="/demo" data-link>Keep shopping</a></div>';
+      } else {
+        app.innerHTML = '<p>Not found. <a href="/demo" data-link>Back to shop</a></p>';
+      }
+    }
+    render();
+  </script>
+  <script src="/journey.js" data-endpoint="/v1/ingest" async></script>
+</body>
+</html>

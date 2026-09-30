@@ -1,0 +1,12 @@
+services:
+  journey:
+    build: .
+    ports: ["4400:4400"]
+    volumes: ["journey-data:/data"]
+    restart: unless-stopped
+    environment:
+      JOURNEY_RETENTION_DAYS: "30"
+      # JOURNEY_INGEST_KEY: change-me
+      # JOURNEY_ADMIN_TOKEN: change-me
+volumes:
+  journey-data:
