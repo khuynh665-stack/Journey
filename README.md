@@ -168,6 +168,8 @@ npm run test:e2e  # real Chromium: demo shop -> collector -> dashboard replay, p
 npm run test:all  # typecheck + both
 ```
 
+GitHub Actions runs the typecheck, unit tests and browser tests on every push and pull request (`.github/workflows/ci.yml`).
+
 For the end-to-end tests, set `CHROMIUM_PATH` if Playwright's browser is not installed in the default location.
 
 Coverage highlights: masking and PII scrubbing; a fuzz test that applies random DOM mutations and
