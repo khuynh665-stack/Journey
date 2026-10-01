@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { openDb, purgeOlderThan } from '../src/server/db';
-import { ingest, validateBatch, ValidationError } from '../src/server/ingest';
-import { funnel, getSession, journeys, overview, searchSessions, stepMatcher } from '../src/server/analytics';
+import { openDb, purgeOlderThan } from '../src/collector/db';
+import { ingest, validateBatch, ValidationError } from '../src/collector/ingest';
+import { funnel, getSession, journeys, overview, searchSessions, stepMatcher } from '../src/collector/analytics';
 import type { IngestBatch, JourneyEvent } from '../src/shared/types';
 
 let n = 0;

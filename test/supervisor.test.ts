@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import net from 'node:net';
-import { Supervisor } from '../src/server/supervisor';
+import { Supervisor } from '../src/collector/supervisor';
 
 const script = path.join(__dirname, 'fixtures', 'fake-worker.js');
 

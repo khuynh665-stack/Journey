@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import type { AddressInfo } from 'node:net';
-import { createApp, type App } from '../src/server/app';
+import { createApp, type App } from '../src/collector/app';
 
 let app: App;
 let base = '';

@@ -82,11 +82,23 @@ Struggle signals are computed by the collector at ingest time:
  └──────────────┘                   └─────────────────────────────┘           └──────────────────┘
 ```
 
-* `src/sdk` capture snippet (about 7 KB gzipped): `recorder.ts`, `serializer.ts` (DOM mirror),
-  `mask.ts` (privacy), `transport.ts` (delivery).
-* `src/server` collector: `app.ts` (HTTP), `ingest.ts`, `analytics.ts`, `db.ts`, `supervisor.ts`.
-* `src/replay` rebuilds recorded pages inside a sandboxed iframe with scripts disabled.
-* `src/dashboard` React single-page app.
+### Project layout
+
+```
+journey/
+├── src/
+│   ├── sdk/          capture snippet that runs on customer sites (journey.js)
+│   │                   recorder.ts, serializer.ts (DOM mirror), mask.ts (privacy), transport.ts (delivery)
+│   ├── collector/    Node service: ingest, storage, analytics, health, supervisor
+│   │                   app.ts (HTTP), ingest.ts, analytics.ts, db.ts, supervisor.ts, worker.ts, main.ts
+│   ├── dashboard/    React app: pages/ (Overview, Sessions, Replay, Journeys, Funnels), components/
+│   ├── replay/       rebuilds recorded pages in a sandboxed iframe (used by the dashboard)
+│   └── shared/       event types shared by all three
+├── test/             unit and integration tests, one file per area; e2e/ runs a real browser
+├── demo/             demo shop used for trying it out and for the browser tests
+├── scripts/          build and traffic simulator
+└── docs/screenshots/
+```
 
 ### HTTP API
 
